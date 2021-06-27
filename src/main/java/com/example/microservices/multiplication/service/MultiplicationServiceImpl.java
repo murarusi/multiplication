@@ -2,20 +2,32 @@ package com.example.microservices.multiplication.service;
 
 import com.example.microservices.multiplication.domain.Multiplication;
 import com.example.microservices.multiplication.domain.MultiplicationResultAttempt;
+import com.example.microservices.multiplication.domain.User;
+import com.example.microservices.multiplication.repository.MultiplicationResultAttemptRepository;
+import com.example.microservices.multiplication.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
+
 @Service
 public class MultiplicationServiceImpl implements MultiplicationService{
 
 
     private RandomGeneratorService randomGeneratorService;
+    private MultiplicationResultAttemptRepository attemptRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    public MultiplicationServiceImpl(final RandomGeneratorService randomGeneratorService) {
+    public MultiplicationServiceImpl(final RandomGeneratorService randomGeneratorService,
+                                     MultiplicationResultAttemptRepository attemptRepository,
+                                     UserRepository userRepository) {
         this.randomGeneratorService = randomGeneratorService;
+        this.attemptRepository = attemptRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -26,9 +38,10 @@ public class MultiplicationServiceImpl implements MultiplicationService{
     }
 
     @Override
+    @Transactional
     public boolean checkAttempt(final MultiplicationResultAttempt attempt) {
         // Check if the user already exists for that alias
-
+        Optional<User> user = userRepository.findByAlias(attempt.getUser().getAlias());
         // Avoids 'hack' attempts
         Assert.isTrue(!attempt.isCorrect(), "You can't send an attempt marked as correct!!");
 
@@ -43,7 +56,7 @@ public class MultiplicationServiceImpl implements MultiplicationService{
                 isCorrect);
 
         // Stores the attempt
-
+        attemptRepository.save(checkedAttempt);
         // Communicates the result via Event
 
 
@@ -52,11 +65,11 @@ public class MultiplicationServiceImpl implements MultiplicationService{
 
     @Override
     public List<MultiplicationResultAttempt> getStatsForUser(String userAlias) {
-        return null;
+        return attemptRepository.findTop5ByUserAliasOrderByIdDesc(userAlias);
     }
 
     @Override
-    public MultiplicationResultAttempt getResultById(Long resultId) {
-        return null;
+    public Optional<MultiplicationResultAttempt> getResultById(Long resultId) {
+        return attemptRepository.findById(resultId);
     }
 }

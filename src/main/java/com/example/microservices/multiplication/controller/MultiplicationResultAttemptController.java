@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/results")
@@ -39,7 +40,7 @@ final class MultiplicationResultAttemptController {
     }
 
     @GetMapping("/{resultId}")
-    ResponseEntity<MultiplicationResultAttempt> getResultById(final @PathVariable("resultId") Long resultId) {
+    ResponseEntity<Optional> getResultById(final @PathVariable("resultId") Long resultId) {
         return ResponseEntity.ok(
                 multiplicationService.getResultById(resultId)
         );
