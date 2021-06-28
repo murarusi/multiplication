@@ -3,6 +3,8 @@ package com.example.microservices.multiplication.service;
 import com.example.microservices.multiplication.domain.Multiplication;
 import com.example.microservices.multiplication.domain.MultiplicationResultAttempt;
 import com.example.microservices.multiplication.domain.User;
+import com.example.microservices.multiplication.event.EventDispatcher;
+import com.example.microservices.multiplication.event.MultiplicationSolvedEvent;
 import com.example.microservices.multiplication.repository.MultiplicationRepository;
 import com.example.microservices.multiplication.repository.MultiplicationResultAttemptRepository;
 import com.example.microservices.multiplication.repository.UserRepository;
@@ -18,20 +20,25 @@ import java.util.Optional;
 public class MultiplicationServiceImpl implements MultiplicationService{
 
 
-    private RandomGeneratorService randomGeneratorService;
-    private MultiplicationResultAttemptRepository attemptRepository;
-    private UserRepository userRepository;
-    private MultiplicationRepository multiplicationRepository;
+    private final RandomGeneratorService randomGeneratorService;
+    private final MultiplicationResultAttemptRepository attemptRepository;
+    private final UserRepository userRepository;
+    private final MultiplicationRepository multiplicationRepository;
+    private final EventDispatcher eventDispatcher;
 
     @Autowired
     public MultiplicationServiceImpl(final RandomGeneratorService randomGeneratorService,
                                      MultiplicationResultAttemptRepository attemptRepository,
                                      UserRepository userRepository,
-                                     MultiplicationRepository multiplicationRepository) {
+                                     MultiplicationRepository multiplicationRepository,
+                                     EventDispatcher eventDispatcher) {
+
+
         this.randomGeneratorService = randomGeneratorService;
         this.attemptRepository = attemptRepository;
         this.userRepository = userRepository;
         this.multiplicationRepository = multiplicationRepository;
+        this.eventDispatcher = eventDispatcher;
     }
 
     @Override
@@ -67,7 +74,12 @@ public class MultiplicationServiceImpl implements MultiplicationService{
 
         // Stores the attempt
         attemptRepository.save(checkedAttempt);
+
         // Communicates the result via Event
+        eventDispatcher.send(new MultiplicationSolvedEvent(checkedAttempt.getId(),
+                checkedAttempt.getUser().getId(),
+                checkedAttempt.isCorrect())
+        );
 
 
         return isCorrect;
