@@ -7,8 +7,8 @@ import java.util.Random;
 @Service
 final class RandomGeneratorServiceImpl implements RandomGeneratorService {
 
-    final static int MINIMUM_FACTOR = 11;
-    final static int MAXIMUM_FACTOR = 99;
+    final static int MINIMUM_FACTOR = 1;
+    final static int MAXIMUM_FACTOR = 9;
 
     @Override
     public int generateRandomFactor() {

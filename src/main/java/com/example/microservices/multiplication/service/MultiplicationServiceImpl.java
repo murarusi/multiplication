@@ -3,6 +3,7 @@ package com.example.microservices.multiplication.service;
 import com.example.microservices.multiplication.domain.Multiplication;
 import com.example.microservices.multiplication.domain.MultiplicationResultAttempt;
 import com.example.microservices.multiplication.domain.User;
+import com.example.microservices.multiplication.repository.MultiplicationRepository;
 import com.example.microservices.multiplication.repository.MultiplicationResultAttemptRepository;
 import com.example.microservices.multiplication.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +21,17 @@ public class MultiplicationServiceImpl implements MultiplicationService{
     private RandomGeneratorService randomGeneratorService;
     private MultiplicationResultAttemptRepository attemptRepository;
     private UserRepository userRepository;
+    private MultiplicationRepository multiplicationRepository;
 
     @Autowired
     public MultiplicationServiceImpl(final RandomGeneratorService randomGeneratorService,
                                      MultiplicationResultAttemptRepository attemptRepository,
-                                     UserRepository userRepository) {
+                                     UserRepository userRepository,
+                                     MultiplicationRepository multiplicationRepository) {
         this.randomGeneratorService = randomGeneratorService;
         this.attemptRepository = attemptRepository;
         this.userRepository = userRepository;
+        this.multiplicationRepository = multiplicationRepository;
     }
 
     @Override
@@ -42,6 +46,12 @@ public class MultiplicationServiceImpl implements MultiplicationService{
     public boolean checkAttempt(final MultiplicationResultAttempt attempt) {
         // Check if the user already exists for that alias
         Optional<User> user = userRepository.findByAlias(attempt.getUser().getAlias());
+
+        //check if multiplication exists already
+        Optional<Multiplication> multiplication = multiplicationRepository.findByFactorAAndFactorB(
+                attempt.getMultiplication().getFactorA(),
+                attempt.getMultiplication().getFactorB()
+        );
         // Avoids 'hack' attempts
         Assert.isTrue(!attempt.isCorrect(), "You can't send an attempt marked as correct!!");
 
@@ -50,8 +60,8 @@ public class MultiplicationServiceImpl implements MultiplicationService{
                 attempt.getMultiplication().getFactorA() *
                         attempt.getMultiplication().getFactorB();
 
-        MultiplicationResultAttempt checkedAttempt = new MultiplicationResultAttempt(attempt.getUser(),
-                attempt.getMultiplication(),
+        MultiplicationResultAttempt checkedAttempt = new MultiplicationResultAttempt(user.orElse(attempt.getUser()),
+                multiplication.orElse(attempt.getMultiplication()),
                 attempt.getResultAttempt(),
                 isCorrect);
 
