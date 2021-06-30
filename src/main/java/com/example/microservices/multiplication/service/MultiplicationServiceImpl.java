@@ -81,6 +81,8 @@ public class MultiplicationServiceImpl implements MultiplicationService{
                 checkedAttempt.isCorrect())
         );
 
+        System.out.println(checkedAttempt.toString());
+
 
         return isCorrect;
     }
